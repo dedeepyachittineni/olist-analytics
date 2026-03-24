@@ -62,13 +62,21 @@ main{position:relative;z-index:1;display:flex;flex:1;overflow:hidden;}
 .empty-state h2{font-size:16px;color:var(--text2);font-weight:500}
 .empty-state p{font-size:13px;max-width:260px;line-height:1.6}
 .result-card{background:var(--card);border:1px solid var(--border2);border-radius:12px;overflow:hidden;animation:fadeIn 0.4s ease;}
-.result-card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.result-card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .result-card-label{font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;}
 .label-response{color:var(--cyan)}.label-chart{color:var(--purple)}.label-sql{color:var(--amber)}.label-data{color:var(--green)}
 .result-card-body{padding:16px}
 .response-text{font-size:14px;line-height:1.7;color:var(--text);}
 .chart-wrap{position:relative;height:300px;}
-.sql-block{background:var(--bg);border-radius:8px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;color:#7dd3fc;overflow-x:auto;white-space:pre-wrap;}
+.sql-block{background:var(--bg);border-radius:8px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;color:#7dd3fc;overflow-x:auto;white-space:pre-wrap;word-break:break-word;}
+/* SQL keyword highlighting */
+.sql-keyword{color:#f472b6;font-weight:600;}
+.sql-table{color:#34d399;}
+.sql-number{color:#fbbf24;}
+/* Copy button */
+.copy-btn{font-size:10px;font-family:'JetBrains Mono',monospace;padding:4px 10px;border-radius:5px;border:1px solid var(--border2);background:rgba(251,191,36,0.08);color:var(--amber);cursor:pointer;transition:all 0.2s;flex-shrink:0;}
+.copy-btn:hover{background:rgba(251,191,36,0.18);border-color:var(--amber);}
+.copy-btn.copied{color:var(--green);border-color:var(--green);background:rgba(52,211,153,0.08);}
 .data-table{width:100%;border-collapse:collapse;font-size:12px}
 .data-table th{text-align:left;padding:8px 12px;background:var(--bg3);color:var(--text2);font-weight:500;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.05em;border-bottom:1px solid var(--border2);}
 .data-table td{padding:8px 12px;color:var(--text);border-bottom:1px solid var(--border);}
@@ -147,6 +155,48 @@ function showTyping(){
 
 function removeTyping(){const t=document.getElementById('typing-indicator');if(t)t.remove();}
 
+// Extract SQL from response text or dedicated field
+function extractSQL(data) {
+  // 1. Check dedicated sql field
+  if (data.sql && data.sql.trim()) return data.sql.trim();
+  if (data.query && data.query.trim()) return data.query.trim();
+
+  // 2. Try to extract from response text (looks for SELECT...FROM pattern)
+  const text = data.output || data.response || '';
+  const sqlMatch = text.match(/```sql\s*([\s\S]*?)```/i) ||
+                   text.match(/```\s*(SELECT[\s\S]*?)```/i) ||
+                   text.match(/(SELECT[\s\S]{20,}?(?:LIMIT\s+\d+|;))/i);
+  if (sqlMatch) return sqlMatch[1].trim();
+
+  return null;
+}
+
+// Highlight SQL keywords
+function highlightSQL(sql) {
+  if (!sql) return '';
+  const keywords = ['SELECT','FROM','WHERE','JOIN','LEFT JOIN','INNER JOIN','RIGHT JOIN',
+    'ON','GROUP BY','ORDER BY','HAVING','LIMIT','AS','AND','OR','NOT','IN','IS','NULL',
+    'COUNT','SUM','AVG','MAX','MIN','DISTINCT','CASE','WHEN','THEN','ELSE','END',
+    'WITH','UNION','INSERT','UPDATE','DELETE','CREATE','DROP','COALESCE','DATE_TRUNC',
+    'CAST','ROUND','UPPER','LOWER','DESC','ASC','BY'];
+  let highlighted = sql.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  keywords.forEach(kw => {
+    const re = new RegExp(`\\b(${kw})\\b`, 'gi');
+    highlighted = highlighted.replace(re, `<span class="sql-keyword">$1</span>`);
+  });
+  // highlight numbers
+  highlighted = highlighted.replace(/\b(\d+\.?\d*)\b/g, '<span class="sql-number">$1</span>');
+  return highlighted;
+}
+
+function copySQL(btn, sql) {
+  navigator.clipboard.writeText(sql).then(() => {
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy SQL'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
 function renderResults(data){
   const panel=document.getElementById('resultsPanel');
   const empty=document.getElementById('emptyState');
@@ -154,22 +204,36 @@ function renderResults(data){
   if(chartInstance){chartInstance.destroy();chartInstance=null;}
   panel.innerHTML='';
 
-  // 1. Response
-  const txt=data.output||data.response||'';
+  // 1. AI Response card
+  const txt = data.output || data.response || '';
   if(txt){
+    // Clean response — remove any SQL block from display text
+    const cleanTxt = txt.replace(/```sql[\s\S]*?```/gi,'').replace(/```[\s\S]*?```/gi,'').trim();
     const card=document.createElement('div');
     card.className='result-card';
-    card.innerHTML=`<div class="result-card-header"><span class="result-card-label label-response">💬 AI Response</span></div><div class="result-card-body"><div class="response-text">${txt.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div></div>`;
+    card.innerHTML=`
+      <div class="result-card-header">
+        <span class="result-card-label label-response">💬 AI Response</span>
+      </div>
+      <div class="result-card-body">
+        <div class="response-text">${cleanTxt.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>
+      </div>`;
     panel.appendChild(card);
   }
 
-  // 2. Chart
+  // 2. Chart card
   const visuals=data.visuals;
   const chartConfig=data.chartConfig;
   if(visuals||chartConfig){
     const card=document.createElement('div');
     card.className='result-card';
-    card.innerHTML=`<div class="result-card-header"><span class="result-card-label label-chart">📊 ${visuals?.title||'Visualization'}</span></div><div class="result-card-body"><div class="chart-wrap"><canvas id="myChart"></canvas></div></div>`;
+    card.innerHTML=`
+      <div class="result-card-header">
+        <span class="result-card-label label-chart">📊 ${visuals?.title||'Visualization'}</span>
+      </div>
+      <div class="result-card-body">
+        <div class="chart-wrap"><canvas id="myChart"></canvas></div>
+      </div>`;
     panel.appendChild(card);
     const ctx=document.getElementById('myChart').getContext('2d');
     const colors=['#38bdf8','#a78bfa','#34d399','#fbbf24','#f87171','#818cf8','#fb923c','#4ade80','#e879f9','#f472b6'];
@@ -193,21 +257,41 @@ function renderResults(data){
     chartInstance=new Chart(ctx,cfg);
   }
 
-  // 3. SQL
-  if(data.query){
+  // 3. SQL Query card — now properly extracted!
+  const sql = extractSQL(data);
+  if(sql){
     const card=document.createElement('div');
     card.className='result-card';
-    card.innerHTML=`<div class="result-card-header"><span class="result-card-label label-sql">🔍 SQL Query</span></div><div class="result-card-body"><div class="sql-block">${data.query}</div></div>`;
+    const highlighted = highlightSQL(sql);
+    card.innerHTML=`
+      <div class="result-card-header">
+        <span class="result-card-label label-sql">🔍 SQL Query</span>
+        <button class="copy-btn" onclick="copySQL(this, \`${sql.replace(/`/g,"'")}\`)">Copy SQL</button>
+      </div>
+      <div class="result-card-body">
+        <div class="sql-block">${highlighted}</div>
+      </div>`;
     panel.appendChild(card);
   }
 
-  // 4. Data table
+  // 4. Data table card
   if(data.data&&data.data.headers&&data.data.rows){
     const card=document.createElement('div');
     card.className='result-card';
     const headers=data.data.headers.map(h=>`<th>${h}</th>`).join('');
     const rows=data.data.rows.map(r=>`<tr>${r.map(c=>`<td>${c??'-'}</td>`).join('')}</tr>`).join('');
-    card.innerHTML=`<div class="result-card-header"><span class="result-card-label label-data">📋 Data (${data.data.rows.length} rows)</span></div><div class="result-card-body"><div class="table-wrap"><table class="data-table"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    card.innerHTML=`
+      <div class="result-card-header">
+        <span class="result-card-label label-data">📋 Data (${data.data.rows.length} rows)</span>
+      </div>
+      <div class="result-card-body">
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr>${headers}</tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>`;
     panel.appendChild(card);
   }
 }
@@ -224,7 +308,8 @@ async function sendMessage(text){
     removeTyping();
     if(!res.ok)throw new Error('Status: '+res.status);
     const data=await res.json();
-    const replyText=(data.output||data.response||'Got a response!').replace(/\*\*(.*?)\*\*/g,'$1');
+    console.log('N8N Response:', data); // debug
+    const replyText=(data.output||data.response||'Got a response!').replace(/\*\*(.*?)\*\*/g,'$1').replace(/```sql[\s\S]*?```/gi,'').trim();
     addMessage('ai',replyText);
     renderResults(data);
   }catch(err){
