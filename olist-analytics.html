@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Olist Analytics — AI Data Analyst</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080c14;--bg2:#0d1220;--bg3:#111827;--card:#131d2e;--card2:#1a2540;
+  --border:rgba(99,179,237,0.08);--border2:rgba(99,179,237,0.15);
+  --cyan:#38bdf8;--cyan2:#0ea5e9;--purple:#a78bfa;--green:#34d399;
+  --amber:#fbbf24;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(56,189,248,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
+body::after{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 40% at 10% 20%,rgba(56,189,248,0.06) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 90% 80%,rgba(167,139,250,0.06) 0%,transparent 60%);pointer-events:none;}
+header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid var(--border2);background:rgba(8,12,20,0.95);backdrop-filter:blur(12px);flex-shrink:0;}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--cyan2),var(--purple));display:flex;align-items:center;justify-content:center;font-size:16px;}
+.logo-text h1{font-size:16px;font-weight:700;letter-spacing:-0.3px}
+.logo-text p{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+main{position:relative;z-index:1;display:flex;flex:1;overflow:hidden;}
+.chat-panel{width:380px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border2);background:rgba(13,18,32,0.6);}
+.suggestions{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:6px;}
+.suggestions-label{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2px;}
+.suggestion-btn{text-align:left;padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:rgba(56,189,248,0.04);color:var(--text2);font-size:12px;font-family:'Space Grotesk',sans-serif;cursor:pointer;transition:all 0.2s;line-height:1.3;}
+.suggestion-btn:hover{background:rgba(56,189,248,0.1);border-color:var(--cyan);color:var(--cyan);}
+.messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth;}
+.messages::-webkit-scrollbar{width:4px}
+.messages::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.msg{display:flex;flex-direction:column;gap:4px;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg-user{align-items:flex-end}.msg-ai{align-items:flex-start}
+.msg-bubble{max-width:85%;padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6;}
+.msg-user .msg-bubble{background:linear-gradient(135deg,var(--cyan2),#0369a1);color:#fff;border-radius:12px 12px 4px 12px;}
+.msg-ai .msg-bubble{background:var(--card);border:1px solid var(--border2);color:var(--text);border-radius:12px 12px 12px 4px;}
+.msg-time{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace}
+.typing{display:flex;gap:4px;align-items:center;padding:12px 14px}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--cyan);opacity:0.4;animation:typingDot 1.2s infinite;}
+.typing span:nth-child(2){animation-delay:0.2s}.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes typingDot{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
+.input-area{padding:12px 16px;border-top:1px solid var(--border2);background:rgba(8,12,20,0.8);}
+.input-wrap{display:flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:8px 12px;transition:border-color 0.2s;}
+.input-wrap:focus-within{border-color:var(--cyan)}
+.input-wrap input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;font-family:'Space Grotesk',sans-serif;}
+.input-wrap input::placeholder{color:var(--text3)}
+.send-btn{width:30px;height:30px;border-radius:6px;background:linear-gradient(135deg,var(--cyan2),var(--purple));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:opacity 0.2s;}
+.send-btn:hover{opacity:0.85}.send-btn:disabled{opacity:0.4;cursor:not-allowed}
+.send-btn svg{width:14px;height:14px;fill:white}
+.results-panel{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
+.results-panel::-webkit-scrollbar{width:4px}
+.results-panel::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--text3);text-align:center;}
+.empty-icon{width:64px;height:64px;border-radius:16px;background:var(--card);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;}
+.empty-state h2{font-size:16px;color:var(--text2);font-weight:500}
+.empty-state p{font-size:13px;max-width:260px;line-height:1.6}
+.result-card{background:var(--card);border:1px solid var(--border2);border-radius:12px;overflow:hidden;animation:fadeIn 0.4s ease;}
+.result-card-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.result-card-label{font-size:10px;font-family:'JetBrains Mono',monospace;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;}
+.label-response{color:var(--cyan)}.label-chart{color:var(--purple)}.label-sql{color:var(--amber)}.label-data{color:var(--green)}
+.result-card-body{padding:16px}
+.response-text{font-size:14px;line-height:1.7;color:var(--text);}
+.chart-wrap{position:relative;height:300px;}
+.sql-block{background:var(--bg);border-radius:8px;padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.8;color:#7dd3fc;overflow-x:auto;white-space:pre-wrap;}
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table th{text-align:left;padding:8px 12px;background:var(--bg3);color:var(--text2);font-weight:500;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.05em;border-bottom:1px solid var(--border2);}
+.data-table td{padding:8px 12px;color:var(--text);border-bottom:1px solid var(--border);}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(56,189,248,0.03)}
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border2)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-icon">📊</div>
+    <div class="logo-text">
+      <h1>Olist Analytics</h1>
+      <p>AI-Powered E-Commerce Insights</p>
+    </div>
+  </div>
+  <div class="status"><div class="status-dot"></div>Connected · 100k rows · Supabase</div>
+</header>
+<main>
+  <div class="chat-panel">
+    <div class="suggestions">
+      <div class="suggestions-label">Try asking</div>
+      <button class="suggestion-btn" onclick="sendMessage('What is the most popular payment method?')">What is the most popular payment method?</button>
+      <button class="suggestion-btn" onclick="sendMessage('What are the top 5 sellers by revenue?')">What are the top 5 sellers by revenue?</button>
+      <button class="suggestion-btn" onclick="sendMessage('Which Brazilian state has the most orders?')">Which Brazilian state has the most orders?</button>
+      <button class="suggestion-btn" onclick="sendMessage('What is the average customer review score?')">What is the average customer review score?</button>
+      <button class="suggestion-btn" onclick="sendMessage('How many orders were delivered vs cancelled?')">How many orders were delivered vs cancelled?</button>
+    </div>
+    <div class="messages" id="messages">
+      <div class="msg msg-ai">
+        <div class="msg-bubble">👋 Hello! I'm your Olist AI Data Analyst. Ask me anything about the Brazilian e-commerce dataset!</div>
+        <div class="msg-time">just now</div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="input-wrap">
+        <input type="text" id="userInput" placeholder="Ask about your data..." onkeydown="if(event.key==='Enter')sendMessage()"/>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="results-panel" id="resultsPanel">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">📈</div>
+      <h2>No results yet</h2>
+      <p>Ask a question on the left to see AI insights, charts and SQL queries here</p>
+    </div>
+  </div>
+</main>
+<script>
+const WEBHOOK="https://dedeepyachittineni.app.n8n.cloud/webhook/fd076d1b-3710-48b4-8398-cd9a6864a299/chat";
+let chartInstance=null;
+let sessionId="session-"+Date.now();
+
+function getTime(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+
+function addMessage(role,text){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div');
+  div.className=`msg msg-${role}`;
+  div.innerHTML=`<div class="msg-bubble">${text}</div><div class="msg-time">${getTime()}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function showTyping(){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div');
+  div.className='msg msg-ai';div.id='typing-indicator';
+  div.innerHTML=`<div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+
+function removeTyping(){const t=document.getElementById('typing-indicator');if(t)t.remove();}
+
+function renderResults(data){
+  const panel=document.getElementById('resultsPanel');
+  const empty=document.getElementById('emptyState');
+  if(empty)empty.remove();
+  if(chartInstance){chartInstance.destroy();chartInstance=null;}
+  panel.innerHTML='';
+
+  // 1. Response
+  const txt=data.output||data.response||'';
+  if(txt){
+    const card=document.createElement('div');
+    card.className='result-card';
+    card.innerHTML=`<div class="result-card-header"><span class="result-card-label label-response">💬 AI Response</span></div><div class="result-card-body"><div class="response-text">${txt.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div></div>`;
+    panel.appendChild(card);
+  }
+
+  // 2. Chart
+  const visuals=data.visuals;
+  const chartConfig=data.chartConfig;
+  if(visuals||chartConfig){
+    const card=document.createElement('div');
+    card.className='result-card';
+    card.innerHTML=`<div class="result-card-header"><span class="result-card-label label-chart">📊 ${visuals?.title||'Visualization'}</span></div><div class="result-card-body"><div class="chart-wrap"><canvas id="myChart"></canvas></div></div>`;
+    panel.appendChild(card);
+    const ctx=document.getElementById('myChart').getContext('2d');
+    const colors=['#38bdf8','#a78bfa','#34d399','#fbbf24','#f87171','#818cf8','#fb923c','#4ade80','#e879f9','#f472b6'];
+    let cfg;
+    if(chartConfig){
+      cfg=chartConfig;
+      if(cfg.options){
+        cfg.options.plugins=cfg.options.plugins||{};
+        cfg.options.plugins.legend={labels:{color:'#94a3b8',font:{family:'Space Grotesk'}}};
+        if(cfg.options.plugins.title)cfg.options.plugins.title.color='#e2e8f0';
+        cfg.options.scales=cfg.options.scales||{};
+        ['x','y'].forEach(ax=>{cfg.options.scales[ax]=cfg.options.scales[ax]||{};cfg.options.scales[ax].ticks={color:'#64748b',font:{family:'JetBrains Mono',size:11}};cfg.options.scales[ax].grid={color:'rgba(99,179,237,0.06)'};});
+      }
+    } else {
+      cfg={
+        type:visuals.type||'bar',
+        data:{labels:visuals.labels||[],datasets:[{label:visuals.y_label||'Value',data:visuals.values||[],backgroundColor:colors.slice(0,(visuals.labels||[]).length),borderWidth:1}]},
+        options:{responsive:true,maintainAspectRatio:false,plugins:{title:{display:true,text:visuals.title||'',color:'#e2e8f0',font:{family:'Space Grotesk',size:14}},legend:{labels:{color:'#94a3b8',font:{family:'Space Grotesk'}}}},scales:{x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:11}},grid:{color:'rgba(99,179,237,0.06)'}},y:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:11}},grid:{color:'rgba(99,179,237,0.06)'}}}}
+      };
+    }
+    chartInstance=new Chart(ctx,cfg);
+  }
+
+  // 3. SQL
+  if(data.query){
+    const card=document.createElement('div');
+    card.className='result-card';
+    card.innerHTML=`<div class="result-card-header"><span class="result-card-label label-sql">🔍 SQL Query</span></div><div class="result-card-body"><div class="sql-block">${data.query}</div></div>`;
+    panel.appendChild(card);
+  }
+
+  // 4. Data table
+  if(data.data&&data.data.headers&&data.data.rows){
+    const card=document.createElement('div');
+    card.className='result-card';
+    const headers=data.data.headers.map(h=>`<th>${h}</th>`).join('');
+    const rows=data.data.rows.map(r=>`<tr>${r.map(c=>`<td>${c??'-'}</td>`).join('')}</tr>`).join('');
+    card.innerHTML=`<div class="result-card-header"><span class="result-card-label label-data">📋 Data (${data.data.rows.length} rows)</span></div><div class="result-card-body"><div class="table-wrap"><table class="data-table"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table></div></div>`;
+    panel.appendChild(card);
+  }
+}
+
+async function sendMessage(text){
+  const input=document.getElementById('userInput');
+  const btn=document.getElementById('sendBtn');
+  const msg=text||input.value.trim();
+  if(!msg)return;
+  input.value='';btn.disabled=true;
+  addMessage('user',msg);showTyping();
+  try{
+    const res=await fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chatInput:msg,sessionId:sessionId})});
+    removeTyping();
+    if(!res.ok)throw new Error('Status: '+res.status);
+    const data=await res.json();
+    const replyText=(data.output||data.response||'Got a response!').replace(/\*\*(.*?)\*\*/g,'$1');
+    addMessage('ai',replyText);
+    renderResults(data);
+  }catch(err){
+    removeTyping();
+    addMessage('ai','⚠️ Could not reach the analytics engine. Make sure N8N is published and active.');
+    console.error(err);
+  }finally{btn.disabled=false;input.focus();}
+}
+</script>
+</body>
+</html>
