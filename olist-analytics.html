@@ -9,7 +9,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#080c14;--bg2:#0d1220;--bg3:#111827;--card:#131d2e;--card2:#1a2540;
+  --bg:#080c14;--bg2:#0d1220;--bg3:#111827;--card:#131d2e;
   --border:rgba(99,179,237,0.08);--border2:rgba(99,179,237,0.15);
   --cyan:#38bdf8;--cyan2:#0ea5e9;--purple:#a78bfa;--green:#34d399;
   --amber:#fbbf24;--red:#f87171;--text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
@@ -18,6 +18,8 @@ html,body{height:100%;overflow:hidden}
 body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
 body::before{content:'';position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(56,189,248,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
 body::after{content:'';position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 60% 40% at 10% 20%,rgba(56,189,248,0.06) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 90% 80%,rgba(167,139,250,0.06) 0%,transparent 60%);pointer-events:none;}
+
+/* HEADER */
 header{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border2);background:rgba(8,12,20,0.95);backdrop-filter:blur(12px);flex-shrink:0;}
 .logo{display:flex;align-items:center;gap:12px}
 .logo-icon{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--cyan2),var(--purple));display:flex;align-items:center;justify-content:center;font-size:15px;}
@@ -26,7 +28,11 @@ header{position:relative;z-index:10;display:flex;align-items:center;justify-cont
 .status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--green)}
 .status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* MAIN */
 main{position:relative;z-index:1;display:flex;flex:1;overflow:hidden;}
+
+/* CHAT PANEL */
 .chat-panel{width:300px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border2);background:rgba(13,18,32,0.6);}
 .suggestions{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:5px;}
 .suggestions-label{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2px;}
@@ -55,39 +61,147 @@ main{position:relative;z-index:1;display:flex;flex:1;overflow:hidden;}
 .send-btn:hover{opacity:0.85}.send-btn:disabled{opacity:0.4;cursor:not-allowed}
 .send-btn svg{width:12px;height:12px;fill:white}
 
-/* ── 2x2 DASHBOARD GRID ── */
-.dashboard{flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;padding:12px;overflow:hidden;}
-.panel{background:var(--card);border:1px solid var(--border2);border-radius:11px;display:flex;flex-direction:column;overflow:hidden;min-height:0;animation:panelIn 0.35s ease both;}
-@keyframes panelIn{from{opacity:0;transform:scale(0.97)}to{opacity:1;transform:scale(1)}}
-.panel-header{padding:9px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px;}
+/* RESULTS AREA */
+.results-area{flex:1;display:flex;flex-direction:column;gap:10px;padding:12px;overflow:hidden;}
+.top-row{display:flex;gap:10px;flex:1;min-height:0;}
+.bottom-row{display:flex;gap:10px;flex-shrink:0;height:210px;}
+.bottom-row.hidden{display:none;}
+
+/* PANEL */
+.panel{background:var(--card);border:1px solid var(--border2);border-radius:11px;display:flex;flex-direction:column;overflow:hidden;position:relative;transition:flex 0.3s ease;}
+.panel.hidden{display:none;}
+.panel-response{flex:1;min-width:0;}
+.panel-chart{flex:1.4;min-width:0;}
+.panel-sql{flex:1;min-width:0;}
+.panel-data{flex:1;min-width:0;}
+
+/* PANEL HEADER */
+.panel-header{padding:9px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:6px;}
 .panel-label{font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;}
-.label-response{color:var(--cyan)}
-.label-chart{color:var(--purple)}
-.label-sql{color:var(--amber)}
-.label-data{color:var(--green)}
-.panel-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px;min-height:0;}
+.label-response{color:var(--cyan)}.label-chart{color:var(--purple)}.label-sql{color:var(--amber)}.label-data{color:var(--green)}
+.header-actions{display:flex;align-items:center;gap:6px;}
+
+/* EXPAND BUTTON */
+.expand-btn{width:22px;height:22px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;font-size:11px;}
+.expand-btn:hover{border-color:var(--text2);color:var(--text2);background:rgba(255,255,255,0.05);}
+
+/* ZOOM CONTROLS (chart only) */
+.zoom-controls{display:flex;align-items:center;gap:3px;}
+.zoom-btn{width:22px;height:22px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;font-size:13px;line-height:1;}
+.zoom-btn:hover{border-color:var(--purple);color:var(--purple);background:rgba(167,139,250,0.08);}
+
+/* COPY BUTTON */
+.copy-btn{font-size:9px;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:4px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;transition:all 0.2s;}
+.copy-btn:hover{color:var(--text2);border-color:var(--text3);}
+.copy-btn.copied{color:var(--green);border-color:var(--green);}
+
+/* PANEL BODY */
+.panel-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:13px;min-height:0;}
 .panel-body::-webkit-scrollbar{width:3px}
 .panel-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-.panel-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;color:var(--text3);text-align:center;}
-.panel-empty-icon{font-size:22px;opacity:0.35;}
-.panel-empty p{font-size:11px;line-height:1.5;max-width:150px;}
-.response-text{font-size:13px;line-height:1.75;color:var(--text);}
+
+/* EMPTY STATE */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--text3);text-align:center;}
+.empty-icon{font-size:26px;opacity:0.3;}
+.empty-state p{font-size:12px;line-height:1.5;max-width:200px;}
+
+/* RESPONSE TEXT */
+.response-text{font-size:13px;line-height:1.8;color:var(--text);}
+
+/* CHART WRAP */
 .chart-wrap{position:relative;width:100%;height:100%;min-height:150px;}
-.sql-block{background:var(--bg);border-radius:7px;padding:11px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;color:#7dd3fc;white-space:pre-wrap;word-break:break-word;}
-.sql-keyword{color:#f472b6;font-weight:600;}
-.sql-number{color:#fbbf24;}
-.copy-btn{font-size:9px;font-family:'JetBrains Mono',monospace;padding:3px 8px;border-radius:4px;border:1px solid var(--border2);background:rgba(251,191,36,0.08);color:var(--amber);cursor:pointer;transition:all 0.2s;flex-shrink:0;}
-.copy-btn:hover{background:rgba(251,191,36,0.18);border-color:var(--amber);}
-.copy-btn.copied{color:var(--green);border-color:var(--green);background:rgba(52,211,153,0.08);}
+.chart-zoom-hint{position:absolute;bottom:6px;right:8px;font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;opacity:0.6;pointer-events:none;}
+
+/* SQL BLOCK — clean */
+.sql-block{background:rgba(0,0,0,0.3);border-radius:7px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9;color:#94a3b8;white-space:pre-wrap;word-break:break-word;border:1px solid var(--border);}
+.sql-kw{color:#e2e8f0;font-weight:600;}
+.sql-fn{color:#7dd3fc;}
+.sql-str{color:#86efac;}
+
+/* DATA TABLE */
 .row-count{font-size:9px;color:var(--text3);font-family:'JetBrains Mono',monospace;}
 .data-table{width:100%;border-collapse:collapse;font-size:11px;}
-.data-table th{text-align:left;padding:6px 10px;background:var(--bg3);color:var(--text2);font-weight:500;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:1;}
+.data-table th{text-align:left;padding:6px 10px;background:rgba(0,0,0,0.3);color:var(--text2);font-weight:500;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.04em;border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:1;}
 .data-table td{padding:6px 10px;color:var(--text);border-bottom:1px solid var(--border);}
 .data-table tr:last-child td{border-bottom:none}
 .data-table tr:hover td{background:rgba(56,189,248,0.03)}
+
+/* ══════════════════════════════════════
+   FULLSCREEN OVERLAY
+══════════════════════════════════════ */
+.fullscreen-overlay{
+  display:none;
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(4,7,13,0.92);
+  backdrop-filter:blur(8px);
+  padding:20px;
+  flex-direction:column;
+  gap:0;
+  animation:overlayIn 0.2s ease;
+}
+.fullscreen-overlay.active{display:flex;}
+@keyframes overlayIn{from{opacity:0}to{opacity:1}}
+.fullscreen-panel{
+  flex:1;
+  background:var(--card);
+  border:1px solid var(--border2);
+  border-radius:14px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  min-height:0;
+}
+.fullscreen-header{
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+}
+.fullscreen-title{font-size:11px;font-family:'JetBrains Mono',monospace;letter-spacing:0.12em;text-transform:uppercase;font-weight:600;}
+.fullscreen-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:20px;min-height:0;}
+.fullscreen-body::-webkit-scrollbar{width:4px}
+.fullscreen-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.close-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.2s;}
+.close-btn:hover{border-color:var(--red);color:var(--red);background:rgba(248,113,113,0.08);}
+.esc-hint{text-align:center;font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;padding:8px 0 0 0;flex-shrink:0;}
+
+/* Fullscreen chart */
+.fullscreen-chart-wrap{position:relative;width:100%;height:100%;min-height:400px;}
+/* Fullscreen response */
+.fullscreen-response{font-size:15px;line-height:1.9;color:var(--text);max-width:800px;margin:0 auto;}
+/* Fullscreen SQL */
+.fullscreen-sql{background:rgba(0,0,0,0.4);border-radius:10px;padding:20px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:2;color:#94a3b8;white-space:pre-wrap;word-break:break-word;border:1px solid var(--border2);}
+/* Fullscreen table */
+.fullscreen-table{width:100%;border-collapse:collapse;font-size:13px;}
+.fullscreen-table th{text-align:left;padding:10px 14px;background:rgba(0,0,0,0.3);color:var(--text2);font-weight:500;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:0.04em;border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:1;}
+.fullscreen-table td{padding:10px 14px;color:var(--text);border-bottom:1px solid var(--border);}
+.fullscreen-table tr:last-child td{border-bottom:none}
+.fullscreen-table tr:hover td{background:rgba(56,189,248,0.04)}
 </style>
 </head>
 <body>
+
+<!-- FULLSCREEN OVERLAY -->
+<div class="fullscreen-overlay" id="fsOverlay" onclick="handleOverlayClick(event)">
+  <div class="fullscreen-panel" id="fsPanel">
+    <div class="fullscreen-header">
+      <span class="fullscreen-title" id="fsTitle"></span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="zoom-controls" id="fsZoomControls" style="display:none;">
+          <button class="zoom-btn" onclick="fsZoom(1.2)" title="Zoom in">+</button>
+          <button class="zoom-btn" onclick="fsZoom(0.8)" title="Zoom out">−</button>
+          <button class="zoom-btn" onclick="fsZoomReset()" title="Reset zoom" style="font-size:10px;width:auto;padding:0 6px;">Reset</button>
+        </div>
+        <button class="close-btn" onclick="closeFullscreen()" title="Close (Esc)">✕</button>
+      </div>
+    </div>
+    <div class="fullscreen-body" id="fsBody"></div>
+  </div>
+  <div class="esc-hint">Press <strong>ESC</strong> or click outside to close</div>
+</div>
+
 <header>
   <div class="logo">
     <div class="logo-icon">📊</div>
@@ -98,13 +212,14 @@ main{position:relative;z-index:1;display:flex;flex:1;overflow:hidden;}
   </div>
   <div class="status"><div class="status-dot"></div>Connected · 100k rows · Supabase</div>
 </header>
+
 <main>
-  <!-- CHAT PANEL -->
+  <!-- CHAT -->
   <div class="chat-panel">
     <div class="suggestions">
       <div class="suggestions-label">Try asking</div>
       <button class="suggestion-btn" onclick="sendMessage('What is the most popular payment method?')">What is the most popular payment method?</button>
-      <button class="suggestion-btn" onclick="sendMessage('What are the top 5 sellers by revenue?')">What are the top 5 sellers by revenue?</button>
+      <button class="suggestion-btn" onclick="sendMessage('What are the top 5 product categories by revenue?')">What are the top 5 product categories by revenue?</button>
       <button class="suggestion-btn" onclick="sendMessage('Which Brazilian state has the most orders?')">Which Brazilian state has the most orders?</button>
       <button class="suggestion-btn" onclick="sendMessage('What is the average customer review score?')">What is the average customer review score?</button>
       <button class="suggestion-btn" onclick="sendMessage('How many orders were delivered vs cancelled?')">How many orders were delivered vs cancelled?</button>
@@ -125,205 +240,336 @@ main{position:relative;z-index:1;display:flex;flex:1;overflow:hidden;}
     </div>
   </div>
 
-  <!-- 2x2 DASHBOARD -->
-  <div class="dashboard">
-    <!-- TOP LEFT: AI Response -->
-    <div class="panel" id="panel-response">
-      <div class="panel-header">
-        <span class="panel-label label-response">💬 AI Response</span>
+  <!-- RESULTS -->
+  <div class="results-area">
+    <div class="top-row">
+
+      <!-- AI RESPONSE -->
+      <div class="panel panel-response" id="panel-response">
+        <div class="panel-header">
+          <span class="panel-label label-response">💬 AI Response</span>
+          <div class="header-actions">
+            <button class="expand-btn" onclick="expandPanel('response')" title="Expand">⤢</button>
+          </div>
+        </div>
+        <div class="panel-body" id="body-response">
+          <div class="empty-state"><div class="empty-icon">💬</div><p>Ask a question to get started</p></div>
+        </div>
       </div>
-      <div class="panel-body" id="body-response">
-        <div class="panel-empty"><div class="panel-empty-icon">💬</div><p>AI explanation will appear here</p></div>
+
+      <!-- CHART -->
+      <div class="panel panel-chart hidden" id="panel-chart">
+        <div class="panel-header">
+          <span class="panel-label label-chart" id="chart-title">📊 Chart</span>
+          <div class="header-actions">
+            <div class="zoom-controls">
+              <button class="zoom-btn" onclick="chartZoom(1.2)" title="Zoom in">+</button>
+              <button class="zoom-btn" onclick="chartZoom(0.8)" title="Zoom out">−</button>
+            </div>
+            <button class="expand-btn" onclick="expandPanel('chart')" title="Expand">⤢</button>
+          </div>
+        </div>
+        <div class="panel-body" id="body-chart">
+          <div class="chart-wrap"><canvas id="myChart"></canvas></div>
+          <div class="chart-zoom-hint">scroll to zoom</div>
+        </div>
       </div>
+
     </div>
-    <!-- TOP RIGHT: Chart -->
-    <div class="panel" id="panel-chart">
-      <div class="panel-header">
-        <span class="panel-label label-chart" id="chart-title">📊 Chart</span>
+
+    <!-- BOTTOM ROW -->
+    <div class="bottom-row hidden" id="bottom-row">
+
+      <!-- SQL -->
+      <div class="panel panel-sql hidden" id="panel-sql">
+        <div class="panel-header">
+          <span class="panel-label label-sql">🔍 SQL Query</span>
+          <div class="header-actions">
+            <button class="copy-btn" id="copyBtn" onclick="copySQL()">Copy</button>
+            <button class="expand-btn" onclick="expandPanel('sql')" title="Expand">⤢</button>
+          </div>
+        </div>
+        <div class="panel-body" id="body-sql"></div>
       </div>
-      <div class="panel-body" id="body-chart">
-        <div class="panel-empty"><div class="panel-empty-icon">📊</div><p>Visualization will appear here</p></div>
+
+      <!-- DATA -->
+      <div class="panel panel-data hidden" id="panel-data">
+        <div class="panel-header">
+          <span class="panel-label label-data">📋 Data</span>
+          <div class="header-actions">
+            <span class="row-count" id="row-count"></span>
+            <button class="expand-btn" onclick="expandPanel('data')" title="Expand">⤢</button>
+          </div>
+        </div>
+        <div class="panel-body" id="body-data"></div>
       </div>
-    </div>
-    <!-- BOTTOM LEFT: SQL -->
-    <div class="panel" id="panel-sql">
-      <div class="panel-header">
-        <span class="panel-label label-sql">🔍 SQL Query</span>
-        <button class="copy-btn" id="copyBtn" style="display:none" onclick="copySQL()">Copy SQL</button>
-      </div>
-      <div class="panel-body" id="body-sql">
-        <div class="panel-empty"><div class="panel-empty-icon">🔍</div><p>SQL query will appear here</p></div>
-      </div>
-    </div>
-    <!-- BOTTOM RIGHT: Data Table -->
-    <div class="panel" id="panel-data">
-      <div class="panel-header">
-        <span class="panel-label label-data">📋 Data</span>
-        <span class="row-count" id="row-count"></span>
-      </div>
-      <div class="panel-body" id="body-data">
-        <div class="panel-empty"><div class="panel-empty-icon">📋</div><p>Query results will appear here</p></div>
-      </div>
+
     </div>
   </div>
 </main>
 
 <script>
-const WEBHOOK = "https://dedeepyachittineni.app.n8n.cloud/webhook/fd076d1b-3710-48b4-8398-cd9a6864a299/chat";
-let chartInstance = null;
-let sessionId = "session-" + Date.now();
-let currentSQL = null;
+const WEBHOOK="https://dedeepyachittineni.app.n8n.cloud/webhook/fd076d1b-3710-48b4-8398-cd9a6864a299/chat";
+let chartInstance=null;
+let fsChartInstance=null;
+let sessionId="session-"+Date.now();
+let currentSQL=null;
+let currentData=null;
+let currentVisuals=null;
+let currentResponse='';
+let chartZoomLevel=1;
 
-function getTime() {
-  return new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-}
-function addMessage(role, text) {
-  const msgs = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = `msg msg-${role}`;
-  div.innerHTML = `<div class="msg-bubble">${text}</div><div class="msg-time">${getTime()}</div>`;
-  msgs.appendChild(div);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-function showTyping() {
-  const msgs = document.getElementById('messages');
-  const div = document.createElement('div');
-  div.className = 'msg msg-ai'; div.id = 'typing-indicator';
-  div.innerHTML = `<div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
-  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
-}
-function removeTyping() { const t = document.getElementById('typing-indicator'); if(t) t.remove(); }
+// ── UTILS ──
+function getTime(){return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
+function show(id){document.getElementById(id).classList.remove('hidden');}
+function hide(id){document.getElementById(id).classList.add('hidden');}
 
-function extractSQL(data) {
-  if (data.sql && data.sql.trim()) return data.sql.trim();
-  if (data.query && data.query.trim()) return data.query.trim();
-  const text = data.output || data.response || '';
-  const m = text.match(/```sql\s*([\s\S]*?)```/i) ||
-            text.match(/```\s*(SELECT[\s\S]*?)```/i) ||
-            text.match(/(SELECT[\s\S]{20,}?(?:LIMIT\s+\d+|;|\n\n))/i);
-  return m ? m[1].trim() : null;
+// ── CHAT ──
+function addMessage(role,text){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div');
+  div.className=`msg msg-${role}`;
+  div.innerHTML=`<div class="msg-bubble">${text}</div><div class="msg-time">${getTime()}</div>`;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
 }
+function showTyping(){
+  const msgs=document.getElementById('messages');
+  const div=document.createElement('div');
+  div.className='msg msg-ai';div.id='typing-indicator';
+  div.innerHTML=`<div class="msg-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;
+}
+function removeTyping(){const t=document.getElementById('typing-indicator');if(t)t.remove();}
 
-function highlightSQL(sql) {
-  if (!sql) return '';
-  const kws = ['SELECT','FROM','WHERE','JOIN','LEFT JOIN','INNER JOIN','RIGHT JOIN',
-    'ON','GROUP BY','ORDER BY','HAVING','LIMIT','AS','AND','OR','NOT','IN','IS','NULL',
-    'COUNT','SUM','AVG','MAX','MIN','DISTINCT','CASE','WHEN','THEN','ELSE','END',
-    'WITH','UNION','COALESCE','DATE_TRUNC','CAST','ROUND','DESC','ASC','BY'];
-  let h = sql.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  kws.forEach(kw => {
-    h = h.replace(new RegExp(`\\b(${kw})\\b`,'gi'), `<span class="sql-keyword">$1</span>`);
-  });
-  h = h.replace(/\b(\d+\.?\d*)\b/g, '<span class="sql-number">$1</span>');
+// ── SQL ──
+function extractSQL(data){
+  if(data.sql&&data.sql.trim())return data.sql.trim();
+  if(data.query&&data.query.trim())return data.query.trim();
+  const text=data.output||data.response||'';
+  const m=text.match(/```sql\s*([\s\S]*?)```/i)||
+           text.match(/```\s*(SELECT[\s\S]*?)```/i)||
+           text.match(/(SELECT[\s\S]{20,}?(?:LIMIT\s+\d+|;|\n\n))/i);
+  return m?m[1].trim():null;
+}
+function highlightSQL(sql,large=false){
+  if(!sql)return'';
+  const kws=['SELECT','FROM','WHERE','JOIN','LEFT JOIN','INNER JOIN','RIGHT JOIN',
+    'ON','GROUP BY','ORDER BY','HAVING','LIMIT','AS','AND','OR','NOT','IN','IS',
+    'NULL','WITH','UNION','DESC','ASC','BY','DISTINCT','CASE','WHEN','THEN','ELSE','END'];
+  const fns=['COUNT','SUM','AVG','MAX','MIN','COALESCE','DATE_TRUNC','CAST','ROUND','UPPER','LOWER'];
+  let h=sql.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  h=h.replace(/'([^']*)'/g,"<span class='sql-str'>'$1'</span>");
+  fns.forEach(fn=>{h=h.replace(new RegExp(`\\b(${fn})\\b`,'gi'),`<span class='sql-fn'>$1</span>`);});
+  kws.forEach(kw=>{h=h.replace(new RegExp(`\\b(${kw})\\b`,'gi'),`<span class='sql-kw'>$1</span>`);});
   return h;
 }
-
-function copySQL() {
-  if (!currentSQL) return;
-  const btn = document.getElementById('copyBtn');
-  navigator.clipboard.writeText(currentSQL).then(() => {
-    btn.textContent = '✓ Copied!'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Copy SQL'; btn.classList.remove('copied'); }, 2000);
+function copySQL(){
+  if(!currentSQL)return;
+  const btn=document.getElementById('copyBtn');
+  navigator.clipboard.writeText(currentSQL).then(()=>{
+    btn.textContent='✓ Done';btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied');},2000);
   });
 }
 
-function renderResults(data) {
-  const colors = ['#38bdf8','#a78bfa','#34d399','#fbbf24','#f87171','#818cf8','#fb923c','#4ade80','#e879f9','#f472b6'];
+// ── CHART BUILD ──
+const COLORS=['#38bdf8','#a78bfa','#34d399','#fbbf24','#f87171','#818cf8','#fb923c','#4ade80','#e879f9','#f472b6'];
+function buildChartConfig(visuals){
+  const isPie=visuals.type==='pie'||visuals.type==='doughnut';
+  return{
+    type:visuals.type||'bar',
+    data:{
+      labels:visuals.labels,
+      datasets:[{
+        label:visuals.y_label||'Value',
+        data:visuals.values,
+        backgroundColor:COLORS.slice(0,visuals.labels.length),
+        borderWidth:isPie?2:0,
+        borderColor:isPie?'rgba(8,12,20,0.5)':undefined,
+        borderRadius:isPie?0:5
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        title:{display:false},
+        legend:{labels:{color:'#94a3b8',font:{family:'Space Grotesk',size:11},boxWidth:12}}
+      },
+      scales:isPie?{}:{
+        x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(99,179,237,0.04)'},border:{color:'transparent'}},
+        y:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:10}},grid:{color:'rgba(99,179,237,0.06)'},border:{color:'transparent'}}
+      }
+    }
+  };
+}
+
+// ── CHART ZOOM (inline) ──
+function chartZoom(factor){
+  chartZoomLevel*=factor;
+  if(!chartInstance)return;
+  const scales=chartInstance.options.scales;
+  if(scales&&scales.y){
+    const cur=scales.y.max||null;
+    const data=chartInstance.data.datasets[0].data;
+    const max=Math.max(...data);
+    const newMax=cur?(cur/factor):(max/factor);
+    scales.y.max=Math.max(newMax,max*0.1);
+    chartInstance.update();
+  }
+}
+
+// ── FULLSCREEN ZOOM ──
+function fsZoom(factor){
+  if(!fsChartInstance)return;
+  const scales=fsChartInstance.options.scales;
+  if(scales&&scales.y){
+    const data=fsChartInstance.data.datasets[0].data;
+    const max=Math.max(...data);
+    const cur=scales.y.max||max;
+    scales.y.max=Math.max(cur/factor,max*0.05);
+    fsChartInstance.update();
+  }
+}
+function fsZoomReset(){
+  if(!fsChartInstance)return;
+  const scales=fsChartInstance.options.scales;
+  if(scales&&scales.y){delete scales.y.max;fsChartInstance.update();}
+}
+
+// ── EXPAND PANEL ──
+function expandPanel(type){
+  const overlay=document.getElementById('fsOverlay');
+  const fsTitle=document.getElementById('fsTitle');
+  const fsBody=document.getElementById('fsBody');
+  const fsZoomControls=document.getElementById('fsZoomControls');
+
+  if(fsChartInstance){fsChartInstance.destroy();fsChartInstance=null;}
+  fsZoomControls.style.display='none';
+
+  if(type==='response'){
+    fsTitle.textContent='💬 AI Response';
+    fsTitle.style.color='var(--cyan)';
+    fsBody.innerHTML=`<div class="fullscreen-response">${currentResponse.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>`;
+  }
+  else if(type==='chart'&&currentVisuals){
+    fsTitle.textContent=`📊 ${currentVisuals.title||'Chart'}`;
+    fsTitle.style.color='var(--purple)';
+    fsZoomControls.style.display='flex';
+    fsBody.innerHTML=`<div class="fullscreen-chart-wrap"><canvas id="fsChart"></canvas></div>`;
+    setTimeout(()=>{
+      const cfg=buildChartConfig(currentVisuals);
+      cfg.options.plugins.legend.labels.font.size=13;
+      if(cfg.options.scales.x)cfg.options.scales.x.ticks.font.size=12;
+      if(cfg.options.scales.y)cfg.options.scales.y.ticks.font.size=12;
+      fsChartInstance=new Chart(document.getElementById('fsChart').getContext('2d'),cfg);
+    },50);
+  }
+  else if(type==='sql'&&currentSQL){
+    fsTitle.textContent='🔍 SQL Query';
+    fsTitle.style.color='var(--amber)';
+    fsBody.innerHTML=`<div class="fullscreen-sql">${highlightSQL(currentSQL,true)}</div>`;
+  }
+  else if(type==='data'&&currentData){
+    fsTitle.textContent=`📋 Data — ${currentData.rows.length} rows`;
+    fsTitle.style.color='var(--green)';
+    const headers=currentData.headers.map(h=>`<th>${h}</th>`).join('');
+    const rows=currentData.rows.map(r=>`<tr>${r.map(c=>`<td>${c??'-'}</td>`).join('')}</tr>`).join('');
+    fsBody.innerHTML=`<table class="fullscreen-table"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  else return;
+
+  overlay.classList.add('active');
+}
+
+function closeFullscreen(){
+  document.getElementById('fsOverlay').classList.remove('active');
+  if(fsChartInstance){fsChartInstance.destroy();fsChartInstance=null;}
+}
+function handleOverlayClick(e){
+  if(e.target===document.getElementById('fsOverlay'))closeFullscreen();
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeFullscreen();});
+
+// ── SCROLL TO ZOOM on inline chart ──
+document.addEventListener('wheel',e=>{
+  const chartPanel=document.getElementById('panel-chart');
+  if(chartPanel&&chartPanel.contains(e.target)){
+    e.preventDefault();
+    chartZoom(e.deltaY<0?1.15:0.87);
+  }},{passive:false});
+
+// ── RENDER RESULTS ──
+function renderResults(data){
+  let bottomNeeded=false;
+
+  // Store for expand
+  currentResponse=(data.output||data.response||'').replace(/```sql[\s\S]*?```/gi,'').replace(/```[\s\S]*?```/gi,'').trim();
+  currentVisuals=data.visuals&&data.visuals.labels&&data.visuals.labels.length>0?data.visuals:null;
+  currentSQL=extractSQL(data);
+  currentData=(data.data&&data.data.headers&&data.data.rows&&data.data.rows.length>0)?data.data:null;
 
   // 1. AI Response
-  const txt = (data.output || data.response || '').replace(/```sql[\s\S]*?```/gi,'').replace(/```[\s\S]*?```/gi,'').trim();
-  document.getElementById('body-response').innerHTML = txt
-    ? `<div class="response-text">${txt.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>`
-    : `<div class="panel-empty"><div class="panel-empty-icon">💬</div><p>No response text</p></div>`;
+  document.getElementById('body-response').innerHTML=currentResponse
+    ?`<div class="response-text">${currentResponse.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>')}</div>`
+    :`<div class="empty-state"><div class="empty-icon">💬</div><p>No response</p></div>`;
 
   // 2. Chart
-  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
-  const visuals = data.visuals;
-  if (visuals && visuals.labels && visuals.values) {
-    document.getElementById('chart-title').textContent = `📊 ${visuals.title || 'Chart'}`;
-    document.getElementById('body-chart').innerHTML = `<div class="chart-wrap"><canvas id="myChart"></canvas></div>`;
-    const isPie = visuals.type === 'pie' || visuals.type === 'doughnut';
-    chartInstance = new Chart(document.getElementById('myChart').getContext('2d'), {
-      type: visuals.type || 'bar',
-      data: {
-        labels: visuals.labels,
-        datasets: [{
-          label: visuals.y_label || 'Value',
-          data: visuals.values,
-          backgroundColor: colors.slice(0, visuals.labels.length),
-          borderWidth: isPie ? 2 : 1,
-          borderColor: isPie ? 'rgba(8,12,20,0.4)' : undefined
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          title: {display:!!visuals.title, text:visuals.title||'', color:'#e2e8f0', font:{family:'Space Grotesk',size:12}},
-          legend: {labels:{color:'#94a3b8', font:{family:'Space Grotesk',size:10}}}
-        },
-        scales: isPie ? {} : {
-          x:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:9}},grid:{color:'rgba(99,179,237,0.05)'}},
-          y:{ticks:{color:'#64748b',font:{family:'JetBrains Mono',size:9}},grid:{color:'rgba(99,179,237,0.05)'}}
-        }
-      }
-    });
+  if(chartInstance){chartInstance.destroy();chartInstance=null;}
+  chartZoomLevel=1;
+  if(currentVisuals){
+    show('panel-chart');
+    document.getElementById('chart-title').textContent=`📊 ${currentVisuals.title||'Chart'}`;
+    document.getElementById('body-chart').innerHTML=`<div class="chart-wrap"><canvas id="myChart"></canvas></div><div class="chart-zoom-hint">scroll to zoom · ⤢ to expand</div>`;
+    chartInstance=new Chart(document.getElementById('myChart').getContext('2d'),buildChartConfig(currentVisuals));
   } else {
-    document.getElementById('body-chart').innerHTML = `<div class="panel-empty"><div class="panel-empty-icon">📊</div><p>No chart for this query</p></div>`;
+    hide('panel-chart');
   }
 
   // 3. SQL
-  currentSQL = extractSQL(data);
-  const copyBtn = document.getElementById('copyBtn');
-  if (currentSQL) {
-    copyBtn.style.display = 'block';
-    document.getElementById('body-sql').innerHTML = `<div class="sql-block">${highlightSQL(currentSQL)}</div>`;
+  if(currentSQL){
+    show('panel-sql');bottomNeeded=true;
+    document.getElementById('body-sql').innerHTML=`<div class="sql-block">${highlightSQL(currentSQL)}</div>`;
   } else {
-    copyBtn.style.display = 'none';
-    document.getElementById('body-sql').innerHTML = `<div class="panel-empty"><div class="panel-empty-icon">🔍</div><p>No SQL found</p></div>`;
+    hide('panel-sql');
   }
 
-  // 4. Data Table
-  if (data.data && data.data.headers && data.data.rows && data.data.rows.length > 0) {
-    document.getElementById('row-count').textContent = `${data.data.rows.length} rows`;
-    const headers = data.data.headers.map(h=>`<th>${h}</th>`).join('');
-    const rows = data.data.rows.map(r=>`<tr>${r.map(c=>`<td>${c??'-'}</td>`).join('')}</tr>`).join('');
-    document.getElementById('body-data').innerHTML = `<table class="data-table"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
+  // 4. Data
+  if(currentData){
+    show('panel-data');bottomNeeded=true;
+    document.getElementById('row-count').textContent=`${currentData.rows.length} rows`;
+    const headers=currentData.headers.map(h=>`<th>${h}</th>`).join('');
+    const rows=currentData.rows.map(r=>`<tr>${r.map(c=>`<td>${c??'-'}</td>`).join('')}</tr>`).join('');
+    document.getElementById('body-data').innerHTML=`<table class="data-table"><thead><tr>${headers}</tr></thead><tbody>${rows}</tbody></table>`;
   } else {
-    document.getElementById('row-count').textContent = '';
-    document.getElementById('body-data').innerHTML = `<div class="panel-empty"><div class="panel-empty-icon">📋</div><p>No data returned</p></div>`;
+    hide('panel-data');document.getElementById('row-count').textContent='';
   }
+
+  if(bottomNeeded)show('bottom-row'); else hide('bottom-row');
 }
 
-async function sendMessage(text) {
-  const input = document.getElementById('userInput');
-  const btn = document.getElementById('sendBtn');
-  const msg = text || input.value.trim();
-  if (!msg) return;
-  input.value = ''; btn.disabled = true;
-  addMessage('user', msg);
-  showTyping();
-  try {
-    const res = await fetch(WEBHOOK, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({chatInput:msg, sessionId:sessionId})
-    });
+// ── SEND MESSAGE ──
+async function sendMessage(text){
+  const input=document.getElementById('userInput');
+  const btn=document.getElementById('sendBtn');
+  const msg=text||input.value.trim();
+  if(!msg)return;
+  input.value='';btn.disabled=true;
+  addMessage('user',msg);showTyping();
+  try{
+    const res=await fetch(WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chatInput:msg,sessionId:sessionId})});
     removeTyping();
-    if (!res.ok) throw new Error('Status: ' + res.status);
-    const data = await res.json();
-    console.log('N8N Response:', data);
-    const replyText = (data.output || data.response || 'Got a response!')
-      .replace(/\*\*(.*?)\*\*/g,'$1').replace(/```sql[\s\S]*?```/gi,'').trim();
-    addMessage('ai', replyText);
+    if(!res.ok)throw new Error('Status: '+res.status);
+    const data=await res.json();
+    console.log('N8N Response:',data);
+    const replyText=(data.output||data.response||'Got a response!').replace(/\*\*(.*?)\*\*/g,'$1').replace(/```sql[\s\S]*?```/gi,'').trim();
+    addMessage('ai',replyText);
     renderResults(data);
-  } catch(err) {
+  }catch(err){
     removeTyping();
-    addMessage('ai', '⚠️ Could not reach the analytics engine. Make sure N8N is active.');
+    addMessage('ai','⚠️ Could not reach the analytics engine. Make sure N8N is active.');
     console.error(err);
-  } finally {
-    btn.disabled = false; input.focus();
-  }
+  }finally{btn.disabled=false;input.focus();}
 }
 </script>
 </body>
 </html>
-
